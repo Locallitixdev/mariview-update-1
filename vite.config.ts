@@ -56,20 +56,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  base: '/',
   build: {
     target: 'esnext',
-    outDir: 'dist',
-    sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-tooltip', '@radix-ui/react-tabs', '@radix-ui/react-select'],
-          charts: ['recharts'],
-        },
-      },
-    },
+    outDir: 'build',
   },
   server: {
     port: 3000,
