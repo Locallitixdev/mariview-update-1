@@ -127,10 +127,16 @@ export async function fetchAISData(bounds?: {
     */
 
     // MOCK DATA (Remove when using real API):
-    return mockAISData;
+    return mockAISData.map(v => ({
+      ...v,
+      lastUpdate: (v as any).lastUpdate || new Date().toISOString()
+    })) as FormattedAISData[];
   } catch (error) {
     console.error('Error fetching AIS data:', error);
-    return mockAISData;
+    return mockAISData.map(v => ({
+      ...v,
+      lastUpdate: (v as any).lastUpdate || new Date().toISOString()
+    })) as FormattedAISData[];
   }
 }
 

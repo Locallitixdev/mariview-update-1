@@ -8,7 +8,7 @@ interface LeafletMiniMapProps {
   coordinates?: { lat: number; lng: number }[];
 }
 
-export default function LeafletMiniMap({ 
+export default function LeafletMiniMap({
   center = [-6.2088, 106.8456],
   zoom = 13,
   className = '',
@@ -43,22 +43,22 @@ export default function LeafletMiniMap({
           const tile = document.createElement('canvas');
           const ctx = tile.getContext('2d');
           const tileSize = this.getTileSize();
-          
+
           tile.width = tileSize.x;
           tile.height = tileSize.y;
-          
+
           if (ctx) {
             ctx.strokeStyle = '#21A68D';
             ctx.lineWidth = 1;
             ctx.globalAlpha = 0.15;
-            
+
             for (let x = 0; x <= tileSize.x; x += tileSize.x / 4) {
               ctx.beginPath();
               ctx.moveTo(x, 0);
               ctx.lineTo(x, tileSize.y);
               ctx.stroke();
             }
-            
+
             for (let y = 0; y <= tileSize.y; y += tileSize.y / 4) {
               ctx.beginPath();
               ctx.moveTo(0, y);
@@ -66,12 +66,12 @@ export default function LeafletMiniMap({
               ctx.stroke();
             }
           }
-          
+
           return tile;
         }
       });
 
-      const gridLayer = new GridLayerClass({ opacity: 1, zIndex: 400 });
+      const gridLayer = new (GridLayerClass as any)({ opacity: 1, zIndex: 400 });
       gridLayer.addTo(mapRef.current);
     }
 
@@ -96,7 +96,7 @@ export default function LeafletMiniMap({
     // Add new polygon if coordinates exist
     if (coordinates && coordinates.length > 0) {
       const latlngs = coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
-      
+
       polygonRef.current = L.polygon(latlngs, {
         color: '#21A68D',
         fillColor: '#21A68D',
@@ -112,10 +112,10 @@ export default function LeafletMiniMap({
 
   return (
     <>
-      <div 
-        ref={containerRef} 
+      <div
+        ref={containerRef}
         className={className}
-        style={{ height: '150px', width: '100%' }} 
+        style={{ height: '150px', width: '100%' }}
       />
       <style>{`
         .map-tiles {

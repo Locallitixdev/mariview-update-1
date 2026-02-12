@@ -47,7 +47,7 @@ const accessoryAssets = [
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case 'available': return '#22c55e';
-    case 'in-flight': 
+    case 'in-flight':
     case 'in-use': return '#21A68D';
     case 'maintenance': return '#D4E268';
     case 'charging': return '#3b82f6';
@@ -64,30 +64,30 @@ const getBatteryColor = (battery: number) => {
 export default function AssetManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
-  
+
   // State untuk CRUD dengan localStorage
   const [uavList, setUavList] = useState(() => loadFromStorage('mariview_assets_uav', uavAssets));
   const [auvList, setAuvList] = useState(() => loadFromStorage('mariview_assets_auv', auvAssets));
   const [vehicleList, setVehicleList] = useState(() => loadFromStorage('mariview_assets_vehicle', vehicleAssets));
   const [accessoryList, setAccessoryList] = useState(() => loadFromStorage('mariview_assets_accessory', accessoryAssets));
-  
+
   // Auto-save to localStorage whenever lists change
   useEffect(() => {
     saveToStorage('mariview_assets_uav', uavList);
   }, [uavList]);
-  
+
   useEffect(() => {
     saveToStorage('mariview_assets_auv', auvList);
   }, [auvList]);
-  
+
   useEffect(() => {
     saveToStorage('mariview_assets_vehicle', vehicleList);
   }, [vehicleList]);
-  
+
   useEffect(() => {
     saveToStorage('mariview_assets_accessory', accessoryList);
   }, [accessoryList]);
-  
+
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState('uav');
@@ -104,10 +104,26 @@ export default function AssetManagement() {
   // CRUD Functions
   const handleAddAsset = () => {
     const newId = `${currentCategory.toUpperCase()}-${String(Date.now()).slice(-3)}`;
-    const newAsset = {
-      id: newId,
-      ...assetForm
+    const newAsset: any = {
+      ...assetForm,
+      id: `${currentCategory.toUpperCase()}-${Math.floor(Math.random() * 1000)}`,
     };
+
+    // Add category-specific defaults
+    if (currentCategory === 'uav') {
+      newAsset.flightHours = 0;
+      newAsset.totalFlights = 0;
+    } else if (currentCategory === 'auv') {
+      newAsset.diveHours = 0;
+      newAsset.totalDives = 0;
+      newAsset.maxDepth = 0;
+    } else if (currentCategory === 'vehicles') {
+      newAsset.fuel = 100;
+      newAsset.mileage = 0;
+      newAsset.plate = 'B ' + Math.floor(Math.random() * 9000 + 1000) + ' XYZ';
+    } else if (currentCategory === 'accessories') {
+      newAsset.quantity = 1;
+    }
 
     if (currentCategory === 'uav') {
       setUavList([...uavList, newAsset]);
@@ -126,13 +142,13 @@ export default function AssetManagement() {
   const handleEditAsset = () => {
     if (editingAsset) {
       if (currentCategory === 'uav') {
-        setUavList(uavList.map(a => a.id === editingAsset.id ? { ...a, ...assetForm } : a));
+        setUavList(uavList.map((a: any) => a.id === editingAsset.id ? { ...a, ...assetForm } : a));
       } else if (currentCategory === 'auv') {
-        setAuvList(auvList.map(a => a.id === editingAsset.id ? { ...a, ...assetForm } : a));
+        setAuvList(auvList.map((a: any) => a.id === editingAsset.id ? { ...a, ...assetForm } : a));
       } else if (currentCategory === 'vehicles') {
-        setVehicleList(vehicleList.map(a => a.id === editingAsset.id ? { ...a, ...assetForm } : a));
+        setVehicleList(vehicleList.map((a: any) => a.id === editingAsset.id ? { ...a, ...assetForm } : a));
       } else {
-        setAccessoryList(accessoryList.map(a => a.id === editingAsset.id ? { ...a, ...assetForm } : a));
+        setAccessoryList(accessoryList.map((a: any) => a.id === editingAsset.id ? { ...a, ...assetForm } : a));
       }
     }
 
@@ -277,79 +293,79 @@ export default function AssetManagement() {
         <TabsContent value="uav">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {uavList
-              .filter(asset => 
+              .filter(asset =>
                 asset.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 asset.name.toLowerCase().includes(searchQuery.toLowerCase())
               )
               .map((asset) => (
-              <Card key={asset.id} className="p-5 bg-card border-border hover:border-[#21A68D] transition-all">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-medium mb-1">{asset.name}</h3>
-                    <p className="text-xs text-muted-foreground">{asset.type}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{asset.id}</p>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    style={{ borderColor: getStatusColor(asset.status), color: getStatusColor(asset.status) }}
-                  >
-                    {asset.status}
-                  </Badge>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Battery</span>
-                      <span style={{ color: getBatteryColor(asset.battery) }}>{asset.battery}%</span>
-                    </div>
-                    <Progress value={asset.battery} className="h-2" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                <Card key={asset.id} className="p-5 bg-card border-border hover:border-[#21A68D] transition-all">
+                  <div className="flex justify-between items-start mb-4">
                     <div>
-                      <p className="text-muted-foreground text-xs">Flight Hours</p>
-                      <p className="font-medium">{asset.flightHours}h</p>
+                      <h3 className="font-medium mb-1">{asset.name}</h3>
+                      <p className="text-xs text-muted-foreground">{asset.type}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{asset.id}</p>
                     </div>
+                    <Badge
+                      variant="outline"
+                      style={{ borderColor: getStatusColor(asset.status), color: getStatusColor(asset.status) }}
+                    >
+                      {asset.status}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-3">
                     <div>
-                      <p className="text-muted-foreground text-xs">Flights</p>
-                      <p className="font-medium">{asset.totalFlights}</p>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">Battery</span>
+                        <span style={{ color: getBatteryColor(asset.battery) }}>{asset.battery}%</span>
+                      </div>
+                      <Progress value={asset.battery} className="h-2" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Flight Hours</p>
+                        <p className="font-medium">{asset.flightHours}h</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Flights</p>
+                        <p className="font-medium">{asset.totalFlights}</p>
+                      </div>
+                    </div>
+
+                    <div className="text-xs">
+                      <p className="text-muted-foreground">Location: {asset.location}</p>
                     </div>
                   </div>
 
-                  <div className="text-xs">
-                    <p className="text-muted-foreground">Location: {asset.location}</p>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setSelectedAsset({ ...asset, category: 'uav' })}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => openEditDialog(asset, 'uav')}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                      onClick={() => handleDeleteAsset(asset.id, 'uav')}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setSelectedAsset({ ...asset, category: 'uav' })}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => openEditDialog(asset, 'uav')}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                    onClick={() => handleDeleteAsset(asset.id, 'uav')}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
           </div>
         </TabsContent>
 
@@ -357,80 +373,80 @@ export default function AssetManagement() {
         <TabsContent value="auv">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {auvList
-              .filter(asset => 
+              .filter(asset =>
                 asset.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 asset.name.toLowerCase().includes(searchQuery.toLowerCase())
               )
               .map((asset) => (
-              <Card key={asset.id} className="p-5 bg-card border-border hover:border-[#0F4C75] transition-all">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-medium mb-1">{asset.name}</h3>
-                    <p className="text-xs text-muted-foreground">{asset.type}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{asset.id}</p>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    style={{ borderColor: getStatusColor(asset.status), color: getStatusColor(asset.status) }}
-                  >
-                    {asset.status}
-                  </Badge>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Battery</span>
-                      <span style={{ color: getBatteryColor(asset.battery) }}>{asset.battery}%</span>
-                    </div>
-                    <Progress value={asset.battery} className="h-2" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                <Card key={asset.id} className="p-5 bg-card border-border hover:border-[#0F4C75] transition-all">
+                  <div className="flex justify-between items-start mb-4">
                     <div>
-                      <p className="text-muted-foreground text-xs">Dive Hours</p>
-                      <p className="font-medium">{asset.diveHours}h</p>
+                      <h3 className="font-medium mb-1">{asset.name}</h3>
+                      <p className="text-xs text-muted-foreground">{asset.type}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{asset.id}</p>
                     </div>
+                    <Badge
+                      variant="outline"
+                      style={{ borderColor: getStatusColor(asset.status), color: getStatusColor(asset.status) }}
+                    >
+                      {asset.status}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-3">
                     <div>
-                      <p className="text-muted-foreground text-xs">Total Dives</p>
-                      <p className="font-medium">{asset.totalDives}</p>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">Battery</span>
+                        <span style={{ color: getBatteryColor(asset.battery) }}>{asset.battery}%</span>
+                      </div>
+                      <Progress value={asset.battery} className="h-2" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Dive Hours</p>
+                        <p className="font-medium">{asset.diveHours}h</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Total Dives</p>
+                        <p className="font-medium">{asset.totalDives}</p>
+                      </div>
+                    </div>
+
+                    <div className="text-xs">
+                      <p className="text-muted-foreground">Max Depth: {asset.maxDepth}m</p>
+                      <p className="text-muted-foreground">Location: {asset.location}</p>
                     </div>
                   </div>
 
-                  <div className="text-xs">
-                    <p className="text-muted-foreground">Max Depth: {asset.maxDepth}m</p>
-                    <p className="text-muted-foreground">Location: {asset.location}</p>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setSelectedAsset({ ...asset, category: 'auv' })}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => openEditDialog(asset, 'auv')}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                      onClick={() => handleDeleteAsset(asset.id, 'auv')}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setSelectedAsset({ ...asset, category: 'auv' })}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => openEditDialog(asset, 'auv')}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                    onClick={() => handleDeleteAsset(asset.id, 'auv')}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
           </div>
         </TabsContent>
 
@@ -438,75 +454,75 @@ export default function AssetManagement() {
         <TabsContent value="vehicles">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {vehicleList
-              .filter(asset => 
+              .filter(asset =>
                 asset.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 asset.name.toLowerCase().includes(searchQuery.toLowerCase())
               )
               .map((asset) => (
-              <Card key={asset.id} className="p-5 bg-card border-border hover:border-[#D4E268] transition-all">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-medium mb-1">{asset.name}</h3>
-                    <p className="text-xs text-muted-foreground">{asset.type}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{asset.plate}</p>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    style={{ borderColor: getStatusColor(asset.status), color: getStatusColor(asset.status) }}
-                  >
-                    {asset.status}
-                  </Badge>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Fuel Level</span>
-                      <span style={{ color: getBatteryColor(asset.fuel) }}>{asset.fuel}%</span>
+                <Card key={asset.id} className="p-5 bg-card border-border hover:border-[#D4E268] transition-all">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-medium mb-1">{asset.name}</h3>
+                      <p className="text-xs text-muted-foreground">{asset.type}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{asset.plate}</p>
                     </div>
-                    <Progress value={asset.fuel} className="h-2" />
+                    <Badge
+                      variant="outline"
+                      style={{ borderColor: getStatusColor(asset.status), color: getStatusColor(asset.status) }}
+                    >
+                      {asset.status}
+                    </Badge>
                   </div>
 
-                  <div className="text-sm">
-                    <div className="flex justify-between mb-1">
-                      <p className="text-muted-foreground text-xs">Mileage</p>
-                      <p className="font-medium">{asset.mileage.toLocaleString()} km</p>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">Fuel Level</span>
+                        <span style={{ color: getBatteryColor(asset.fuel) }}>{asset.fuel}%</span>
+                      </div>
+                      <Progress value={asset.fuel} className="h-2" />
+                    </div>
+
+                    <div className="text-sm">
+                      <div className="flex justify-between mb-1">
+                        <p className="text-muted-foreground text-xs">Mileage</p>
+                        <p className="font-medium">{asset.mileage.toLocaleString()} km</p>
+                      </div>
+                    </div>
+
+                    <div className="text-xs">
+                      <p className="text-muted-foreground">Location: {asset.location}</p>
                     </div>
                   </div>
 
-                  <div className="text-xs">
-                    <p className="text-muted-foreground">Location: {asset.location}</p>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setSelectedAsset({ ...asset, category: 'vehicle' })}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => openEditDialog(asset, 'vehicles')}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                      onClick={() => handleDeleteAsset(asset.id, 'vehicle')}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setSelectedAsset({ ...asset, category: 'vehicle' })}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => openEditDialog(asset, 'vehicles')}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                    onClick={() => handleDeleteAsset(asset.id, 'vehicle')}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
           </div>
         </TabsContent>
 
@@ -514,93 +530,93 @@ export default function AssetManagement() {
         <TabsContent value="accessories">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {accessoryList
-              .filter(asset => 
+              .filter(asset =>
                 asset.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 asset.name.toLowerCase().includes(searchQuery.toLowerCase())
               )
               .map((asset) => (
-              <Card key={asset.id} className="p-5 bg-card border-border hover:border-[#8b5cf6] transition-all">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-medium mb-1">{asset.name}</h3>
-                    <p className="text-xs text-muted-foreground">{asset.type}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{asset.id}</p>
+                <Card key={asset.id} className="p-5 bg-card border-border hover:border-[#8b5cf6] transition-all">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-medium mb-1">{asset.name}</h3>
+                      <p className="text-xs text-muted-foreground">{asset.type}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{asset.id}</p>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      style={{ borderColor: getStatusColor(asset.status), color: getStatusColor(asset.status) }}
+                    >
+                      Stock: {asset.quantity}
+                    </Badge>
                   </div>
-                  <Badge
-                    variant="outline"
-                    style={{ borderColor: getStatusColor(asset.status), color: getStatusColor(asset.status) }}
-                  >
-                    Stock: {asset.quantity}
-                  </Badge>
-                </div>
 
-                <div className="space-y-2 text-sm">
-                  {asset.capacity && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Capacity:</span>
-                      <span>{asset.capacity}</span>
-                    </div>
-                  )}
-                  {asset.voltage && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Voltage:</span>
-                      <span>{asset.voltage}</span>
-                    </div>
-                  )}
-                  {asset.cycles && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Avg Cycles:</span>
-                      <span>{asset.cycles}</span>
-                    </div>
-                  )}
-                  {asset.resolution && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Resolution:</span>
-                      <span>{asset.resolution}</span>
-                    </div>
-                  )}
-                  {asset.size && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Size:</span>
-                      <span>{asset.size}</span>
-                    </div>
-                  )}
-                  {asset.output && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Output:</span>
-                      <span>{asset.output}</span>
-                    </div>
-                  )}
-                </div>
+                  <div className="space-y-2 text-sm">
+                    {asset.capacity && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Capacity:</span>
+                        <span>{asset.capacity}</span>
+                      </div>
+                    )}
+                    {asset.voltage && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Voltage:</span>
+                        <span>{asset.voltage}</span>
+                      </div>
+                    )}
+                    {asset.cycles && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Avg Cycles:</span>
+                        <span>{asset.cycles}</span>
+                      </div>
+                    )}
+                    {asset.resolution && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Resolution:</span>
+                        <span>{asset.resolution}</span>
+                      </div>
+                    )}
+                    {asset.size && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Size:</span>
+                        <span>{asset.size}</span>
+                      </div>
+                    )}
+                    {asset.output && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Output:</span>
+                        <span>{asset.output}</span>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setSelectedAsset({ ...asset, category: 'accessory' })}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => openEditDialog(asset, 'accessories')}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="flex-1 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                    onClick={() => handleDeleteAsset(asset.id, 'accessory')}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setSelectedAsset({ ...asset, category: 'accessory' })}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => openEditDialog(asset, 'accessories')}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="flex-1 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                      onClick={() => handleDeleteAsset(asset.id, 'accessory')}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
           </div>
         </TabsContent>
       </Tabs>

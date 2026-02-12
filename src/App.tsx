@@ -15,6 +15,7 @@ import AisStream from './components/AisStream';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './components/ui/tooltip';
 import { Home, PlusCircle, Package, History, Settings, Menu, ChevronLeft, ChevronRight, FileText, CloudSun, Radio, Ship } from 'lucide-react';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function AppContent() {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -249,7 +250,9 @@ function AppContent() {
         <div className="flex-1 flex flex-col min-w-0 h-screen">
 
           <main className="flex-1 overflow-auto bg-[#0a0e1a] lg:pt-0 pt-16">
-            {renderSection()}
+            <ErrorBoundary>
+              {renderSection()}
+            </ErrorBoundary>
           </main>
         </div>
       </div>

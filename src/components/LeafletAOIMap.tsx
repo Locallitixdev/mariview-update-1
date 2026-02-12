@@ -26,16 +26,16 @@ const createGridLayer = () => {
       const tile = document.createElement('canvas');
       const ctx = tile.getContext('2d');
       const tileSize = this.getTileSize();
-      
+
       tile.width = tileSize.x;
       tile.height = tileSize.y;
-      
+
       if (ctx) {
         // Draw grid lines
         ctx.strokeStyle = '#21A68D';
         ctx.lineWidth = 1;
         ctx.globalAlpha = 0.3;
-        
+
         // Vertical lines
         for (let x = 0; x <= tileSize.x; x += tileSize.x / 4) {
           ctx.beginPath();
@@ -43,7 +43,7 @@ const createGridLayer = () => {
           ctx.lineTo(x, tileSize.y);
           ctx.stroke();
         }
-        
+
         // Horizontal lines
         for (let y = 0; y <= tileSize.y; y += tileSize.y / 4) {
           ctx.beginPath();
@@ -51,20 +51,20 @@ const createGridLayer = () => {
           ctx.lineTo(tileSize.x, y);
           ctx.stroke();
         }
-        
+
         // Draw thicker border lines
         ctx.strokeStyle = '#21A68D';
         ctx.lineWidth = 2;
         ctx.globalAlpha = 0.5;
         ctx.strokeRect(0, 0, tileSize.x, tileSize.y);
       }
-      
+
       return tile;
     }
   });
 };
 
-export default function LeafletAOIMap({ 
+export default function LeafletAOIMap({
   center = [-6.5625, 106.8942], // Sentul, Bogor
   zoom = 13,
   areas = [],
@@ -92,7 +92,7 @@ export default function LeafletAOIMap({
 
       // Add grid layer
       const GridLayerClass = createGridLayer();
-      const gridLayer = new GridLayerClass({
+      const gridLayer = new (GridLayerClass as any)({
         opacity: 1,
         zIndex: 400
       });
@@ -125,9 +125,9 @@ export default function LeafletAOIMap({
       if (!mapRef.current) return;
 
       const color = area.priority === 'High' ? '#ef4444' : area.priority === 'Medium' ? '#f59e0b' : '#22c55e';
-      
+
       const latlngs = area.coordinates.map(coord => [coord.lat, coord.lng] as [number, number]);
-      
+
       const polygon = L.polygon(latlngs, {
         color: color,
         fillColor: color,
@@ -160,7 +160,7 @@ export default function LeafletAOIMap({
       // Add label at centroid
       const bounds = polygon.getBounds();
       const center = bounds.getCenter();
-      
+
       const label = L.marker(center, {
         icon: L.divIcon({
           className: 'aoi-label',
@@ -188,7 +188,7 @@ export default function LeafletAOIMap({
 
     // Fit bounds to show all areas
     if (areas.length > 0 && mapRef.current) {
-      const allCoords = areas.flatMap(area => 
+      const allCoords = areas.flatMap(area =>
         area.coordinates.map(coord => [coord.lat, coord.lng] as [number, number])
       );
       if (allCoords.length > 0) {
@@ -200,10 +200,10 @@ export default function LeafletAOIMap({
 
   return (
     <>
-      <div 
-        ref={containerRef} 
+      <div
+        ref={containerRef}
         className={className}
-        style={{ height: '100%', width: '100%', minHeight: '400px' }} 
+        style={{ height: '100%', width: '100%', minHeight: '400px' }}
       />
       <style>{`
         .map-tiles {

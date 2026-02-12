@@ -89,6 +89,14 @@ export default function Dashboard() {
             {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
           </span>
         </div>
+
+        <div className="dt-header-center">
+          <div className="dt-title-text">
+            <h1 className="dt-main-title text-center">MARIVIEW COMMAND CENTER</h1>
+            <span className="dt-sub-title block text-center">Maritime Digital Twin v2.0</span>
+          </div>
+        </div>
+
         <div className="dt-header-right">
           <div className="dt-header-wx-item">
             <Cloud className="w-4 h-4 text-blue-400" />
@@ -100,11 +108,6 @@ export default function Dashboard() {
             <Wind className="w-4 h-4 text-cyan-500" />
             <span className="dt-header-wx-val">12.5 kn</span>
             <span className="dt-header-wx-label">Wind Speed</span>
-          </div>
-          <div className="dt-sep" />
-          <div className="dt-header-wx-item">
-            <span className="dt-header-wx-val">1.2m</span>
-            <span className="dt-header-wx-label">Wave Height</span>
           </div>
           <div className="dt-sep" />
           <div className="dt-header-sys">
@@ -397,10 +400,15 @@ export default function Dashboard() {
           z-index: 50;
         }
         .dt-header-left,
+        .dt-header-center,
         .dt-header-right {
           display: flex;
           align-items: center;
           gap: 14px;
+        }
+        .dt-header-center {
+          flex: 1;
+          justify-content: center;
         }
         .dt-header-time-block {
           display: flex;
@@ -431,6 +439,22 @@ export default function Dashboard() {
           width: 1px;
           height: 20px;
           background: rgba(255,255,255,0.1);
+        }
+        .dt-main-title {
+          font-size: 14px;
+          font-weight: 800;
+          color: white;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          margin: 0;
+        }
+        .dt-sub-title {
+          font-size: 9px;
+          font-weight: 600;
+          color: #21A68D;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          opacity: 0.8;
         }
         .dt-sep-v {
           width: 1px;

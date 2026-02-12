@@ -23,7 +23,10 @@ import {
   getVesselByMMSI,
   Mission,
   Drone,
+  Flight,
 } from '../data/mock-data';
+
+export type { Mission, Drone, Flight };
 
 import { loadFromStorage } from '../utils/storage';
 

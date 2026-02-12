@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+// @ts-ignore
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -301,7 +302,7 @@ export default function DigitalTwinMap({
         if (!m) return;
 
         const addGf = (gf: any) => {
-            if (!m) return;
+            if (!m || !m.getStyle()) return;
             const sourceId = `source-${gf.id}`;
             const fillLayerId = `fill-${gf.id}`;
             const lineLayerId = `line-${gf.id}`;
@@ -339,27 +340,31 @@ export default function DigitalTwinMap({
             }
         };
 
-        const onMapLoad = () => {
-            geofences.forEach(addGf);
-        };
-
-        if (m.loaded()) {
-            geofences.forEach(addGf);
-        } else {
-            m.on('load', onMapLoad);
-        }
+        // Create Geofences
+        geofences?.forEach(gf => {
+            if (m.loaded()) {
+                addGf(gf);
+            } else {
+                m.on('load', () => addGf(gf));
+            }
+        });
 
         return () => {
-            if (m) {
-                m.off('load', onMapLoad);
-                geofences.forEach(gf => {
-                    const fillLayerId = `fill-${gf.id}`;
-                    const lineLayerId = `line-${gf.id}`;
-                    const sourceId = `source-${gf.id}`;
-                    if (m.getLayer(fillLayerId)) m.removeLayer(fillLayerId);
-                    if (m.getLayer(lineLayerId)) m.removeLayer(lineLayerId);
-                    if (m.getSource(sourceId)) m.removeSource(sourceId);
-                });
+            if (m && m.getStyle()) {
+                try {
+                    geofences.forEach(gf => {
+                        const fillLayerId = `fill-${gf.id}`;
+                        const lineLayerId = `line-${gf.id}`;
+                        const sourceId = `source-${gf.id}`;
+
+                        // Additional safety check for each layer check
+                        if (typeof m.getLayer === 'function' && m.getLayer(fillLayerId)) m.removeLayer(fillLayerId);
+                        if (typeof m.getLayer === 'function' && m.getLayer(lineLayerId)) m.removeLayer(lineLayerId);
+                        if (typeof m.getSource === 'function' && m.getSource(sourceId)) m.removeSource(sourceId);
+                    });
+                } catch (e) {
+                    console.warn('Map cleanup warning:', e);
+                }
             }
         };
     }, [geofences]);

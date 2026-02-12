@@ -10,7 +10,7 @@ import { Slider } from './ui/slider';
 import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { User, Settings as SettingsIcon, Brain, Plus, Edit, Trash2, Shield, Save, UserPlus, Palette, RotateCcw, Database, Download, Upload, Trash } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { Toaster } from './ui/sonner';
 import { useTheme } from '../contexts/ThemeContext';
 import { exportAllData, importAllData, clearAllStorage } from '../utils/storage';
@@ -61,7 +61,7 @@ export default function SettingsView() {
   };
 
   const handleToggleAIModel = (modelId: number) => {
-    setAiModels(aiModels.map(m => 
+    setAiModels(aiModels.map(m =>
       m.id === modelId ? { ...m, status: m.status === 'active' ? 'inactive' : 'active' } : m
     ));
     toast.success('AI Model status updated');
@@ -110,7 +110,7 @@ export default function SettingsView() {
   return (
     <div className="p-4 md:p-6">
       <Toaster />
-      
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl">Settings</h1>
@@ -212,9 +212,9 @@ export default function SettingsView() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <p className="font-semibold">{user.name}</p>
-                          <Badge 
+                          <Badge
                             variant="outline"
-                            style={{ 
+                            style={{
                               borderColor: user.status === 'active' ? '#22c55e' : '#6b7280',
                               color: user.status === 'active' ? '#22c55e' : '#6b7280'
                             }}
@@ -237,8 +237,8 @@ export default function SettingsView() {
                       <Button size="icon" variant="outline">
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button 
-                        size="icon" 
+                      <Button
+                        size="icon"
                         variant="outline"
                         className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
                         onClick={() => handleDeleteUser(user.id)}
@@ -268,9 +268,9 @@ export default function SettingsView() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
-                        <Badge 
+                        <Badge
                           variant="outline"
-                          style={{ 
+                          style={{
                             borderColor: drone.type === 'UAV' ? '#21A68D' : '#0F4C75',
                             color: drone.type === 'UAV' ? '#21A68D' : '#0F4C75'
                           }}
@@ -280,7 +280,7 @@ export default function SettingsView() {
                         <h3 className="text-lg">{drone.name}</h3>
                         <span className="text-sm text-muted-foreground">ID: {drone.id}</span>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         {drone.type === 'UAV' ? (
                           <>
@@ -323,7 +323,7 @@ export default function SettingsView() {
                         )}
                       </div>
                     </div>
-                    <Button 
+                    <Button
                       variant="outline"
                       className="ml-4"
                       onClick={() => {
@@ -358,9 +358,9 @@ export default function SettingsView() {
                           <Label>Max Altitude (meters)</Label>
                           <span className="text-sm text-muted-foreground">{selectedDrone.maxAltitude}m</span>
                         </div>
-                        <Slider 
-                          defaultValue={[selectedDrone.maxAltitude]} 
-                          max={200} 
+                        <Slider
+                          defaultValue={[selectedDrone.maxAltitude]}
+                          max={200}
                           step={10}
                           className="[&_[role=slider]]:bg-[#21A68D]"
                         />
@@ -370,9 +370,9 @@ export default function SettingsView() {
                           <Label>Max Speed (m/s)</Label>
                           <span className="text-sm text-muted-foreground">{selectedDrone.maxSpeed} m/s</span>
                         </div>
-                        <Slider 
-                          defaultValue={[selectedDrone.maxSpeed]} 
-                          max={30} 
+                        <Slider
+                          defaultValue={[selectedDrone.maxSpeed]}
+                          max={30}
                           step={1}
                           className="[&_[role=slider]]:bg-[#21A68D]"
                         />
@@ -380,8 +380,8 @@ export default function SettingsView() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <Label>Battery Capacity (mAh)</Label>
-                          <Input 
-                            type="number" 
+                          <Input
+                            type="number"
                             defaultValue={selectedDrone.batteryCapacity}
                             className="w-32 bg-input"
                           />
@@ -390,8 +390,8 @@ export default function SettingsView() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <Label>Max Flight Time (min)</Label>
-                          <Input 
-                            type="number" 
+                          <Input
+                            type="number"
                             defaultValue={selectedDrone.flightTime}
                             className="w-32 bg-input"
                           />
@@ -405,9 +405,9 @@ export default function SettingsView() {
                           <Label>Max Depth (meters)</Label>
                           <span className="text-sm text-muted-foreground">{selectedDrone.maxDepth}m</span>
                         </div>
-                        <Slider 
-                          defaultValue={[selectedDrone.maxDepth]} 
-                          max={1500} 
+                        <Slider
+                          defaultValue={[selectedDrone.maxDepth]}
+                          max={1500}
                           step={50}
                           className="[&_[role=slider]]:bg-[#0F4C75]"
                         />
@@ -417,9 +417,9 @@ export default function SettingsView() {
                           <Label>Max Speed (m/s)</Label>
                           <span className="text-sm text-muted-foreground">{selectedDrone.maxSpeed} m/s</span>
                         </div>
-                        <Slider 
-                          defaultValue={[selectedDrone.maxSpeed]} 
-                          max={5} 
+                        <Slider
+                          defaultValue={[selectedDrone.maxSpeed]}
+                          max={5}
                           step={0.5}
                           className="[&_[role=slider]]:bg-[#0F4C75]"
                         />
@@ -427,8 +427,8 @@ export default function SettingsView() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <Label>Battery Capacity (mAh)</Label>
-                          <Input 
-                            type="number" 
+                          <Input
+                            type="number"
                             defaultValue={selectedDrone.batteryCapacity}
                             className="w-32 bg-input"
                           />
@@ -437,8 +437,8 @@ export default function SettingsView() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <Label>Max Operation Time (min)</Label>
-                          <Input 
-                            type="number" 
+                          <Input
+                            type="number"
                             defaultValue={selectedDrone.operationTime}
                             className="w-32 bg-input"
                           />
@@ -446,7 +446,7 @@ export default function SettingsView() {
                       </div>
                     </>
                   )}
-                  
+
                   <div className="flex gap-3 pt-4 border-t border-border">
                     <Button variant="outline" className="flex-1" onClick={() => setIsEditDroneOpen(false)}>
                       Cancel
@@ -484,9 +484,9 @@ export default function SettingsView() {
                         <Badge variant="outline" className="text-xs">
                           {model.version}
                         </Badge>
-                        <Badge 
+                        <Badge
                           variant="outline"
-                          style={{ 
+                          style={{
                             borderColor: model.status === 'active' ? '#22c55e' : '#6b7280',
                             color: model.status === 'active' ? '#22c55e' : '#6b7280'
                           }}
@@ -494,7 +494,7 @@ export default function SettingsView() {
                           {model.status}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-muted-foreground">Confidence Threshold</p>
@@ -507,7 +507,7 @@ export default function SettingsView() {
                         <div>
                           <p className="text-muted-foreground">Status</p>
                           <div className="mt-1">
-                            <Switch 
+                            <Switch
                               checked={model.status === 'active'}
                               onCheckedChange={() => handleToggleAIModel(model.id)}
                             />
@@ -521,9 +521,9 @@ export default function SettingsView() {
                           <Label>Confidence Threshold</Label>
                           <span className="text-muted-foreground">{model.confidence}%</span>
                         </div>
-                        <Slider 
-                          defaultValue={[model.confidence]} 
-                          max={100} 
+                        <Slider
+                          defaultValue={[model.confidence]}
+                          max={100}
                           step={1}
                           className="[&_[role=slider]]:bg-[#21A68D]"
                         />
@@ -566,7 +566,7 @@ export default function SettingsView() {
             </Card>
 
             <div className="flex justify-end pt-4">
-              <Button 
+              <Button
                 className="bg-[#21A68D] hover:bg-[#1a8a72]"
                 onClick={() => handleSave('AI parameters saved successfully')}
               >
@@ -592,7 +592,7 @@ export default function SettingsView() {
                 <div className="flex-1">
                   <h3 className="text-base mb-2">Local Storage</h3>
                   <p className="text-sm text-muted-foreground">
-                    Data disimpan di browser localStorage. Data akan tetap ada setelah refresh, 
+                    Data disimpan di browser localStorage. Data akan tetap ada setelah refresh,
                     tetapi terbatas pada device ini saja.
                   </p>
                 </div>
@@ -611,7 +611,7 @@ export default function SettingsView() {
                     Download backup semua data (missions, drones, assets, flights, settings)
                   </p>
                 </div>
-                <Button 
+                <Button
                   onClick={handleExportData}
                   className="bg-[#21A68D] hover:bg-[#1a8a72]"
                 >
@@ -641,7 +641,7 @@ export default function SettingsView() {
                     className="hidden"
                     id="import-file"
                   />
-                  <Button 
+                  <Button
                     onClick={() => document.getElementById('import-file')?.click()}
                     variant="outline"
                     className="border-[#0F4C75] text-[#0F4C75] hover:bg-[#0F4C75] hover:text-white"
@@ -665,7 +665,7 @@ export default function SettingsView() {
                     Hapus semua data dan reset ke default. <strong>Tindakan ini tidak dapat dibatalkan!</strong>
                   </p>
                 </div>
-                <Button 
+                <Button
                   onClick={handleClearAllData}
                   variant="destructive"
                 >
