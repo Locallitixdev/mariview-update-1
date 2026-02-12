@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -6,11 +6,13 @@ import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { Textarea } from './ui/textarea';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import { Plus, Edit, Trash2, CheckCircle, Users, Plane, ListChecks, ArrowLeft, AlertCircle, ChevronRight, MapPin, Square, Pentagon, Eraser, Radio, Brain, Ship, Anchor, BarChart3, Activity, History as LuHistory } from 'lucide-react';
+import { Plus, Edit, Trash2, CheckCircle, Users, Plane, ListChecks, ArrowLeft, AlertCircle, ChevronRight, MapPin, Square, Pentagon, Eraser, Radio, Brain, Ship, Anchor, BarChart3, Activity, History as LuHistory, Upload, FileVideo, FileJson, Cpu, Check, X } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Progress } from './ui/progress';
+import { toast } from 'sonner';
 import LeafletDrawMap from './LeafletDrawMap';
 import LeafletMiniMap from './LeafletMiniMap';
 import LiveOperations from './LiveOperationsNew';
@@ -111,6 +113,50 @@ export default function NewFlight({ onMissionLaunch }: NewFlightProps) {
 
   // AI Model Selection State (single selection)
   const [selectedAIModel, setSelectedAIModel] = useState<string>('');
+
+  // Post Analysis State
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisTasks, setAnalysisTasks] = useState([
+    { id: 1, name: 'Frame Extraction & Alignment', status: 'pending' as 'pending' | 'processing' | 'completed' },
+    { id: 2, name: 'Vessel Detection & Tracking', status: 'pending' as 'pending' | 'processing' | 'completed' },
+    { id: 3, name: 'Telemetry Interpolation', status: 'pending' as 'pending' | 'processing' | 'completed' },
+    { id: 4, name: 'Anomaly Scoring', status: 'pending' as 'pending' | 'processing' | 'completed' },
+    { id: 5, name: 'Report Generation', status: 'pending' as 'pending' | 'processing' | 'completed' },
+  ]);
+
+  const handleStartAnalysis = () => {
+    if (!selectedMission) return;
+
+    setIsAnalyzing(true);
+    setAnalysisProgress(0);
+    setAnalysisTasks(prev => prev.map(t => ({ ...t, status: 'pending' })));
+
+    let currentTask = 0;
+    const interval = setInterval(() => {
+      setAnalysisProgress((prev: number) => {
+        const next = prev + 1;
+
+        // Update task statuses based on progress
+        if (next === 1) setAnalysisTasks((tasks: any[]) => tasks.map(t => t.id === 1 ? { ...t, status: 'processing' } : t));
+        if (next === 20) setAnalysisTasks((tasks: any[]) => tasks.map(t => t.id === 1 ? { ...t, status: 'completed' } : t.id === 2 ? { ...t, status: 'processing' } : t));
+        if (next === 50) setAnalysisTasks((tasks: any[]) => tasks.map(t => t.id === 2 ? { ...t, status: 'completed' } : t.id === 3 ? { ...t, status: 'processing' } : t));
+        if (next === 70) setAnalysisTasks((tasks: any[]) => tasks.map(t => t.id === 3 ? { ...t, status: 'completed' } : t.id === 4 ? { ...t, status: 'processing' } : t));
+        if (next === 90) setAnalysisTasks((tasks: any[]) => tasks.map(t => t.id === 4 ? { ...t, status: 'completed' } : t.id === 5 ? { ...t, status: 'processing' } : t));
+
+        if (next >= 100) {
+          clearInterval(interval);
+          setAnalysisTasks((tasks: any[]) => tasks.map(t => ({ ...t, status: 'completed' })));
+          setIsAnalyzing(false);
+          toast.success('Analysis Complete', {
+            description: 'Mission report and detections are now available in History.',
+          });
+          return 100;
+        }
+        return next;
+      });
+    }, 100);
+  };
 
   // Initialize missions from localStorage
   const initialMissions: Mission[] = [
@@ -1848,13 +1894,198 @@ export default function NewFlight({ onMissionLaunch }: NewFlightProps) {
       }
       {
         view === 'post-analysis' && (
-          <div className="space-y-6">
-            <Card className="p-6 bg-card border-border">
-              <div className="text-center text-muted-foreground py-12">
-                <p className="text-lg font-semibold">Post Analysis</p>
-                <p className="text-sm mt-2">Analysis results will appear here after mission completion.</p>
+          <div className="space-y-6 pb-20">
+            {/* Post Analysis Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                  <BarChart3 className="w-6 h-6 text-[#21A68D]" />
+                  Mission Post-Analysis
+                </h2>
+                <p className="text-sm text-muted-foreground">Upload flight media and telemetry for AI processing and reporting</p>
               </div>
-            </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column: Mission Selection & Controls */}
+              <div className="lg:col-span-1 space-y-6">
+                <Card className="p-6 bg-[#0f172a]/60 backdrop-blur-xl border-white/10 shadow-2xl">
+                  <h3 className="text-sm font-bold text-[#21A68D] uppercase tracking-widest mb-4">1. Mission Context</h3>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground uppercase font-bold">Select Completed Mission</Label>
+                      <Select
+                        value={selectedMission?.id || ''}
+                        onValueChange={(id: string) => setSelectedMission(missions.find((m: Mission) => m.id === id) || null)}
+                      >
+                        <SelectTrigger className="bg-white/5 border-white/10 text-white h-12">
+                          <SelectValue placeholder="Choose a mission..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#0f172a] border-white/10">
+                          {missions.filter((m: Mission) => m.status === 'completed' || m.status === 'pending').map((m: Mission) => (
+                            <SelectItem key={m.id} value={m.id} className="text-white hover:bg-[#21A68D]/10">
+                              {m.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground italic">Target mission for analysis synchronization</p>
+                    </div>
+
+                    {selectedMission && (
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-2">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Category:</span>
+                          <span className="text-white font-medium">{selectedMission.category}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Created:</span>
+                          <span className="text-white font-medium">{new Date(selectedMission.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                <Card className="p-6 bg-[#0f172a]/60 backdrop-blur-xl border-white/10 shadow-2xl">
+                  <h3 className="text-sm font-bold text-[#21A68D] uppercase tracking-widest mb-4">3. Analysis Configuration</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                      <div className="flex items-center gap-3">
+                        <Cpu className="w-5 h-5 text-blue-400" />
+                        <div>
+                          <p className="text-xs font-bold text-white">AI Engine v2.4</p>
+                          <p className="text-[10px] text-muted-foreground">Optimal Processing</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-blue-500/20 text-blue-400 border-none">Active</Badge>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="opt-detection" checked />
+                        <label htmlFor="opt-detection" className="text-xs text-white">Object Detection (Vessels/Vehicles)</label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="opt-ocr" />
+                        <label htmlFor="opt-ocr" className="text-xs text-white">Hull/Number Recognition</label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="opt-telemetry" checked />
+                        <label htmlFor="opt-telemetry" className="text-xs text-white">Telemetry Interpolation</label>
+                      </div>
+                    </div>
+
+                    <Button
+                      className="w-full h-12 mt-4 bg-[#21A68D] hover:bg-[#1a8a72] text-white font-bold"
+                      disabled={!selectedMission || isAnalyzing}
+                      onClick={handleStartAnalysis}
+                    >
+                      <Activity className="w-4 h-4 mr-2" />
+                      Run Mission Analysis
+                    </Button>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Right Column: Upload Zones */}
+              <div className="lg:col-span-2 space-y-6">
+                <Card className="p-8 bg-[#0f172a]/60 backdrop-blur-xl border-white/10 shadow-2xl">
+                  <h3 className="text-sm font-bold text-[#21A68D] uppercase tracking-widest mb-6">2. Data Ingestion</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Video Upload Zone */}
+                    <div className="space-y-4">
+                      <Label className="text-xs text-muted-foreground uppercase font-bold flex items-center gap-2">
+                        <FileVideo className="w-4 h-4 text-[#D4E268]" />
+                        Flight Recording (MP4/MOV)
+                      </Label>
+                      <div
+                        className="group relative h-48 rounded-2xl border-2 border-dashed border-white/10 hover:border-[#21A68D]/50 hover:bg-[#21A68D]/5 transition-all flex flex-col items-center justify-center p-6 text-center cursor-pointer"
+                        onClick={() => document.getElementById('video-upload')?.click()}
+                      >
+                        <input id="video-upload" type="file" accept="video/*" className="hidden" />
+                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                          <Upload className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                        <p className="text-sm font-medium text-white">Drop video file here</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Maximum file size: 2GB</p>
+                      </div>
+                    </div>
+
+                    {/* Telemetry Upload Zone */}
+                    <div className="space-y-4">
+                      <Label className="text-xs text-muted-foreground uppercase font-bold flex items-center gap-2">
+                        <FileJson className="w-4 h-4 text-blue-400" />
+                        Telemetry Log (CSV/JSON/LOG)
+                      </Label>
+                      <div
+                        className="group relative h-48 rounded-2xl border-2 border-dashed border-white/10 hover:border-[#21A68D]/50 hover:bg-[#21A68D]/5 transition-all flex flex-col items-center justify-center p-6 text-center cursor-pointer"
+                        onClick={() => document.getElementById('log-upload')?.click()}
+                      >
+                        <input id="log-upload" type="file" accept=".csv,.json,.log" className="hidden" />
+                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                          <Upload className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                        <p className="text-sm font-medium text-white">Drop telemetry file here</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Exported from GCS or Drone Local Storage</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 p-4 rounded-xl bg-muted/20 border border-white/5 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-[#D4E268] mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-white mb-1">Processing Note</p>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        For accurate AI analysis, please ensure the mission timestamps in the video match the telemetry logs.
+                        The system will attempt to auto-sync using the mission takeoff event metadata.
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Analysis Status / Results Simulation (Hidden until run) */}
+                <Card className={`p-6 bg-[#0f172a]/60 backdrop-blur-xl border-white/10 shadow-2xl border-t-2 transition-all duration-500 ${isAnalyzing ? 'border-t-blue-500' : 'border-t-[#21A68D]'}`}>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-sm font-bold text-white uppercase tracking-widest">Processing Queue</h3>
+                    <Badge className={isAnalyzing ? "bg-blue-500/20 text-blue-400 animate-pulse" : "bg-[#21A68D]/10 text-[#21A68D]"}>
+                      {isAnalyzing ? 'Analyzing...' : analysisProgress === 100 ? 'Analysis Complete' : 'Ready to start'}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">AI Inference Pipeline</span>
+                        <span className="text-white font-bold">{analysisProgress}%</span>
+                      </div>
+                      <Progress value={analysisProgress} className="h-2 bg-white/5" />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                      {analysisTasks.map((task: any) => (
+                        <div key={task.id} className={`p-3 rounded-lg border flex flex-col gap-2 transition-all duration-300 ${task.status === 'completed' ? 'bg-[#21A68D]/10 border-[#21A68D]/30' : task.status === 'processing' ? 'bg-blue-500/10 border-blue-500/30' : 'bg-white/5 border-white/5 opacity-50'}`}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-bold text-white uppercase truncate pr-1">{task.name}</span>
+                            {task.status === 'completed' ? (
+                              <Check className="w-3 h-3 text-[#21A68D]" />
+                            ) : task.status === 'processing' ? (
+                              <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping"></div>
+                            ) : (
+                              <div className="w-2 h-2 rounded-full bg-muted"></div>
+                            )}
+                          </div>
+                          <div className="text-[8px] text-muted-foreground uppercase font-bold">
+                            {task.status}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
           </div>
         )
       }

@@ -22,8 +22,7 @@ FROM nginx:stable-alpine
 COPY --from=build /app/build /usr/share/nginx/html
 
 # Copy nginx config for SAP (Single Page Application)
-# Uncomment the line below if you create a custom nginx.conf
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

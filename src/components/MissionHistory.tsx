@@ -1,14 +1,45 @@
 import { Card } from './ui/card';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Download, FileText, CheckCircle, XCircle, Clock, TrendingUp, MapPin, Navigation, Play, BarChart3, Layers, Ship, Plane as PlaneIcon, Waves, Square, Pentagon, Trash2, Activity } from 'lucide-react';
+import {
+  BarChart3,
+  MapPin,
+  Play,
+  Download,
+  Pentagon,
+  Square,
+  Trash2,
+  CheckCircle,
+  Calendar,
+  Clock,
+  ChevronRight,
+  Filter,
+  Search,
+  MoreVertical,
+  ExternalLink,
+  Video,
+  FileText,
+  Upload,
+  FileVideo,
+  FileJson,
+  Cpu,
+  XCircle,
+  Activity,
+  Navigation,
+  TrendingUp,
+  Layers,
+  Ship,
+  Plane as PlaneIcon,
+  Waves,
+  Eye
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './ui/sheet';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
-import { useState } from 'react';
-import { missions, missionSummary } from './shared-data';
+import { missions, missionSummary, Mission, Flight } from './shared-data';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import LeafletDrawMap from './LeafletDrawMap';
 import FlightPathCanvas from './FlightPathCanvas';
@@ -253,6 +284,68 @@ export default function MissionHistory() {
   const [showENC, setShowENC] = useState(false);
   const [mapKey, setMapKey] = useState(0);
 
+  interface AnalysisTask {
+    id: number;
+    name: string;
+    status: 'pending' | 'processing' | 'completed';
+  }
+
+  // Analysis & Upload State
+  const [analysisVideoFile, setAnalysisVideoFile] = useState<File | null>(null);
+  const [analysisTelemetryFile, setAnalysisTelemetryFile] = useState<File | null>(null);
+  const [isAnalyzingLocal, setIsAnalyzingLocal] = useState(false);
+  const [localAnalysisProgress, setLocalAnalysisProgress] = useState(0);
+  const [localAnalysisTasks, setLocalAnalysisTasks] = useState<AnalysisTask[]>([
+    { id: 1, name: 'Frame Extraction', status: 'pending' },
+    { id: 2, name: 'Vessel Detection', status: 'pending' },
+    { id: 3, name: 'Trajectory Mapping', status: 'pending' },
+    { id: 4, name: 'Report Generation', status: 'pending' },
+  ]);
+
+  // Video List State
+  const [analysisDroneType, setAnalysisDroneType] = useState<'UAV' | 'AUV' | null>(null);
+  const [videoFilter, setVideoFilter] = useState<'All' | 'UAV' | 'AUV'>('All');
+  const [uploadedVideos, setUploadedVideos] = useState([
+    {
+      id: 'VID-001',
+      name: 'port_surveillance_morning.mp4',
+      type: 'UAV',
+      duration: '23:45',
+      date: '2025-01-20',
+      time: '14:23',
+      size: '2.4 GB',
+      status: 'processed',
+      missionId: 'MSN-2025-001',
+      missionName: 'Port Surveillance - Morning Patrol',
+      hasLog: true
+    },
+    {
+      id: 'VID-002',
+      name: 'underwater_inspection.mp4',
+      type: 'AUV',
+      duration: '18:30',
+      date: '2025-01-19',
+      time: '10:15',
+      size: '1.8 GB',
+      status: 'processed',
+      missionId: 'MSN-2025-002',
+      missionName: 'Underwater Hull Inspection',
+      hasLog: false
+    }
+  ]);
+
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAnalysisVideoFile(e.target.files[0]);
+    }
+  };
+
+  const handleTelemetryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAnalysisTelemetryFile(e.target.files[0]);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'success': return '#22c55e';
@@ -272,10 +365,40 @@ export default function MissionHistory() {
   };
 
   const handleAnalyzeMission = () => {
-    setAnalyzedMission(selectedMission);
-    setIsAnalyzeOpen(false);
-    // Generate PDF Report logic here
-    alert('Mission analyzed! AOI information saved. Ready to generate PDF Report.');
+    if (!selectedMission || !analysisVideoFile) {
+      alert('Please upload a video file to begin analysis.');
+      return;
+    }
+
+    setIsAnalyzingLocal(true);
+    setLocalAnalysisProgress(0);
+    setLocalAnalysisTasks(prev => prev.map(t => ({ ...t, status: 'pending' })));
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 2;
+      setLocalAnalysisProgress(progress);
+
+      // Update task statuses
+      if (progress === 10) setLocalAnalysisTasks((tasks: AnalysisTask[]) => tasks.map(t => t.id === 1 ? { ...t, status: 'processing' } : t));
+      if (progress === 30) setLocalAnalysisTasks((tasks: AnalysisTask[]) => tasks.map(t => t.id === 1 ? { ...t, status: 'completed' } : t.id === 2 ? { ...t, status: 'processing' } : t));
+      if (progress === 60) setLocalAnalysisTasks((tasks: AnalysisTask[]) => tasks.map(t => t.id === 2 ? { ...t, status: 'completed' } : t.id === 3 ? { ...t, status: 'processing' } : t));
+      if (progress === 85) setLocalAnalysisTasks((tasks: AnalysisTask[]) => tasks.map(t => t.id === 3 ? { ...t, status: 'completed' } : t.id === 4 ? { ...t, status: 'processing' } : t));
+
+      if (progress >= 100) {
+        clearInterval(interval);
+        setLocalAnalysisTasks((tasks: AnalysisTask[]) => tasks.map(t => ({ ...t, status: 'completed' })));
+        setIsAnalyzingLocal(false);
+        setAnalyzedMission(selectedMission);
+        alert(`Analysis for ${selectedMission.name} Complete! Mission report available.`);
+        setTimeout(() => {
+          setIsAnalyzeOpen(false);
+          // Reset uploads
+          setAnalysisVideoFile(null);
+          setAnalysisTelemetryFile(null);
+        }, 1500);
+      }
+    }, 150);
   };
 
   const handleReplayMission = (mission: typeof missions[0]) => {
@@ -803,7 +926,7 @@ export default function MissionHistory() {
 
         {/* Analyze Mission Sheet - Add AOI Information */}
         <Sheet open={isAnalyzeOpen} onOpenChange={setIsAnalyzeOpen}>
-          <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+          <SheetContent side="right" className="w-full sm:max-w-7xl overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Analyze Mission & Add AOI Information</SheetTitle>
               <SheetDescription>
@@ -827,7 +950,7 @@ export default function MissionHistory() {
                     </div>
                     <div>
                       <p className="text-muted-foreground">Distance</p>
-                      <p className="mt-1">{selectedMission.flights.reduce((acc, f) => acc + f.distance, 0).toFixed(1)} km</p>
+                      <p className="mt-1">{selectedMission.flights.reduce((acc: number, f: Flight) => acc + (f.distance || 0), 0).toFixed(1)} km</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Detections</p>
@@ -916,22 +1039,230 @@ export default function MissionHistory() {
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t border-border">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setIsAnalyzeOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="flex-1 bg-[#21A68D] hover:bg-[#1a8a72]"
-                  onClick={handleAnalyzeMission}
-                >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Save Analysis
-                </Button>
+              {/* Enhanced Video Analysis Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                {/* Left Panel: Upload Video */}
+                <div className="lg:col-span-4 space-y-6">
+                  <div className="p-6 rounded-2xl bg-muted/20 border border-white/5 space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-[#21A68D]/10">
+                        <Upload className="w-5 h-5 text-[#21A68D]" />
+                      </div>
+                      <h3 className="text-lg font-bold text-white">Upload Video</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Step 1: Select Drone Type</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button
+                          variant="outline"
+                          className={`h-12 gap-2 border-2 transition-all ${analysisDroneType === 'UAV' ? 'border-[#21A68D] bg-[#21A68D]/10 text-white' : 'border-white/5 hover:border-[#21A68D]/50'}`}
+                          onClick={() => setAnalysisDroneType('UAV')}
+                        >
+                          <PlaneIcon className="w-4 h-4" />
+                          UAV
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className={`h-12 gap-2 border-2 transition-all ${analysisDroneType === 'AUV' ? 'border-[#21A68D] bg-[#21A68D]/10 text-white' : 'border-white/5 hover:border-[#21A68D]/50'}`}
+                          onClick={() => setAnalysisDroneType('AUV')}
+                        >
+                          <Waves className="w-4 h-4" />
+                          AUV
+                        </Button>
+                      </div>
+                    </div>
+
+                    {analysisDroneType && (
+                      <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Step 2: Choose Files</p>
+                        <div className="grid grid-cols-1 gap-4">
+                          <div
+                            className={`p-8 rounded-xl border-2 border-dashed transition-all text-center cursor-pointer ${analysisVideoFile ? 'border-[#21A68D] bg-[#21A68D]/5' : 'border-white/5 hover:border-[#21A68D]/50 hover:bg-[#21A68D]/5'}`}
+                            onClick={() => document.getElementById('analyze-video-upload')?.click()}
+                          >
+                            <input id="analyze-video-upload" type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
+                            <FileVideo className={`w-10 h-10 mx-auto mb-3 ${analysisVideoFile ? 'text-[#21A68D]' : 'text-muted-foreground'}`} />
+                            <p className="text-sm font-medium text-white">{analysisVideoFile ? analysisVideoFile.name : 'Drop Flight Video here'}</p>
+                            <p className="text-xs text-muted-foreground mt-2">MP4, MOV up to 2GB</p>
+                          </div>
+
+                          <div
+                            className={`p-4 rounded-xl border-2 border-dashed transition-all flex items-center gap-4 cursor-pointer ${analysisTelemetryFile ? 'border-[#21A68D] bg-[#21A68D]/5' : 'border-white/5 hover:border-[#21A68D]/50 hover:bg-[#21A68D]/5'}`}
+                            onClick={() => document.getElementById('analyze-telemetry-upload')?.click()}
+                          >
+                            <input id="analyze-telemetry-upload" type="file" accept=".csv,.json,.log" className="hidden" onChange={handleTelemetryUpload} />
+                            <div className={`p-2 rounded-lg ${analysisTelemetryFile ? 'bg-[#21A68D]/20' : 'bg-white/5'}`}>
+                              <FileJson className={`w-5 h-5 ${analysisTelemetryFile ? 'text-[#21A68D]' : 'text-muted-foreground'}`} />
+                            </div>
+                            <div className="text-left flex-1">
+                              <p className="text-xs font-medium text-white">{analysisTelemetryFile ? analysisTelemetryFile.name : 'Upload Flight Logs (Optional)'}</p>
+                              <p className="text-[10px] text-muted-foreground">{analysisTelemetryFile ? `${(analysisTelemetryFile.size / 1024).toFixed(1)} KB` : 'CSV, JSON supported'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {isAnalyzingLocal && (
+                      <div className="space-y-4 pt-4 border-t border-white/5 animate-in fade-in slide-in-from-top-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-white uppercase tracking-wider">AI Pipeline</span>
+                          <span className="text-xs text-[#21A68D] font-mono">{localAnalysisProgress}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[#21A68D] transition-all duration-300"
+                            style={{ width: `${localAnalysisProgress}%` }}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          {localAnalysisTasks.map((task: any) => (
+                            <div key={task.id} className={`p-2 rounded border text-[10px] flex items-center justify-between ${task.status === 'completed' ? 'bg-[#21A68D]/10 border-[#21A68D]/30 text-[#21A68D]' : task.status === 'processing' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-white/2 border-white/5 text-muted-foreground opacity-50'}`}>
+                              <span>{task.name}</span>
+                              <span className="text-[8px] uppercase font-bold">{task.status}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-3">
+                      <Button
+                        variant="ghost"
+                        className="flex-1 text-muted-foreground hover:text-white"
+                        onClick={() => setIsAnalyzeOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="flex-1 bg-[#21A68D] hover:bg-[#1a8a72]"
+                        onClick={handleAnalyzeMission}
+                        disabled={isAnalyzingLocal || !analysisVideoFile}
+                      >
+                        {isAnalyzingLocal ? (
+                          <>
+                            <Cpu className="w-4 h-4 mr-2 animate-spin" />
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <BarChart3 className="w-4 h-4 mr-2" />
+                            Start AI Analysis
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Panel: Uploaded Videos */}
+                <div className="lg:col-span-8 space-y-6">
+                  <div className="p-6 rounded-2xl bg-muted/20 border border-white/5 min-h-[600px] flex flex-col">
+                    <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-[#21A68D]/10">
+                          <Video className="w-5 h-5 text-[#21A68D]" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white">Uploaded Videos ({uploadedVideos.length})</h3>
+                      </div>
+                      <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
+                        {['All', 'UAV', 'AUV'].map((f) => (
+                          <button
+                            key={f}
+                            onClick={() => setVideoFilter(f as any)}
+                            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${videoFilter === f ? 'bg-[#21A68D] text-white shadow-lg' : 'text-muted-foreground hover:text-white'}`}
+                          >
+                            {f}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 space-y-4">
+                      {uploadedVideos
+                        .filter(v => videoFilter === 'All' || v.type === videoFilter)
+                        .map((video) => (
+                          <div key={video.id} className="p-4 rounded-xl bg-black/40 border border-white/5 hover:border-[#21A68D]/30 transition-all group">
+                            <div className="flex gap-6">
+                              {/* Video Thumbnail Placeholder */}
+                              <div className="relative w-48 aspect-video rounded-lg bg-white/5 border border-white/10 overflow-hidden flex-shrink-0">
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/0 transition-all">
+                                  <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:scale-110 transition-all">
+                                    <Play className="w-4 h-4 text-white fill-white" />
+                                  </div>
+                                </div>
+                                <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-black/60 text-[10px] font-mono text-white">
+                                  {video.duration}
+                                </div>
+                              </div>
+
+                              {/* Info */}
+                              <div className="flex-1 space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h4 className="text-sm font-bold text-white mb-2 group-hover:text-[#21A68D] transition-all">{video.name}</h4>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className={`text-[10px] h-5 bg-white/5 ${video.type === 'UAV' ? 'text-blue-400 border-blue-400/30' : 'text-purple-400 border-purple-400/30'}`}>
+                                        {video.type === 'UAV' ? <PlaneIcon className="w-3 h-3 mr-1" /> : <Waves className="w-3 h-3 mr-1" />}
+                                        {video.type}
+                                      </Badge>
+                                      {video.hasLog && (
+                                        <Badge variant="outline" className="text-[10px] h-5 bg-[#21A68D]/10 text-[#21A68D] border-[#21A68D]/30">
+                                          <FileJson className="w-3 h-3 mr-1" />
+                                          Flight Log
+                                        </Badge>
+                                      )}
+                                      <Badge variant="outline" className="text-[10px] h-5 bg-green-500/10 text-green-400 border-green-500/30">
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        {video.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex gap-2">
+                                    <Button size="icon" variant="ghost" className="w-8 h-8 rounded-lg hover:bg-[#21A68D]/10 hover:text-[#21A68D]">
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                    <Button size="icon" variant="ghost" className="w-8 h-8 rounded-lg hover:bg-[#21A68D]/10 hover:text-[#21A68D]">
+                                      <Download className="w-4 h-4" />
+                                    </Button>
+                                    <Button size="icon" variant="ghost" className="w-8 h-8 rounded-lg hover:bg-red-500/10 hover:text-red-500">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-4 text-[10px] text-muted-foreground pb-3 border-b border-white/5">
+                                  <div className="flex items-center gap-1.5">
+                                    <Calendar className="w-3 h-3" />
+                                    {video.date}
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <Clock className="w-3 h-3" />
+                                    {video.time}
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <Upload className="w-3 h-3" />
+                                    {video.size}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 pt-1 text-[10px]">
+                                  <span className="text-muted-foreground">Linked to:</span>
+                                  <span className="px-2 py-0.5 rounded bg-[#21A68D]/10 text-[#21A68D] font-medium flex items-center gap-1.5">
+                                    <ExternalLink className="w-3 h-3" />
+                                    {video.missionName}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </SheetContent>
@@ -973,7 +1304,7 @@ export default function MissionHistory() {
                       </div>
                       <div className="p-2 rounded bg-background border border-border text-center">
                         <p className="text-muted-foreground">Distance</p>
-                        <p className="mt-1">{selectedMission.flights.reduce((acc, f) => acc + (f.distance || 0), 0).toFixed(1)} km</p>
+                        <p className="mt-1">{selectedMission.flights.reduce((acc: number, f: any) => acc + (f.distance || 0), 0).toFixed(1)} km</p>
                       </div>
                       <div className="p-2 rounded bg-background border border-border text-center">
                         <p className="text-muted-foreground">Detections</p>
